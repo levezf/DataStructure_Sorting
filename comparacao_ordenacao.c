@@ -3,58 +3,55 @@
 #include <time.h>
 #include <string.h>
 
+
 #define RANDOM 0
 #define ASCENDING 1
 #define DESCENDING 2
 
 #define AMOUNT_ALGO 5
+#define AMOUNT_LEN 9
 
 typedef char* String;
 
 struct data_sorting{
     int order;
-    time_t duration;
+    float duration;
     String name;
     unsigned int comparisons;
     unsigned int movement;
-};
-typedef struct data_sorting DataSorting;
-
-struct vector{
     int *vec;
     int len;
-    DataSorting *ds;
 };
-typedef struct vector Vector;
+typedef struct data_sorting Vector;
 
 String createString(int n);
 void freeString(String str);
 void createVector(Vector *vec, int lenVector, int lenVecInVector);
 void freeVector(Vector *v);
-
 void bubbleSort(Vector *vec);
 void insertSort(Vector *vec);
 void selectionSort(Vector *vec);
 void shellSort(Vector *vec);
 void quickSort(Vector *vec, int begin, int end);
+int partition (Vector* vec, int begin, int end);
 //heapsort e mais
-
 void move(int *vect, int position1, int position2);
 void getSort(Vector *vec, int algo);
-
 void cpyValues(Vector *vector);
 void generateValues(Vector *vetor, int len, int order);
-time_t timeCalculator(time_t start, time_t final);
+float timeCalculator(time_t start, time_t final);
 void printTables(Vector *vec);
-void addLine(Vector *vec);
+void addLine(Vector vec);
 void addWhiteSpaces(int lenCurrent, int lenFinal);
 void addHeader(Vector *vec);
+
+
 
 int main(){
 
     Vector vector[AMOUNT_ALGO];
     int i,j, k;
-    int vec_lens[9];
+    int vec_lens[AMOUNT_LEN];
     vec_lens[0]=10;
     vec_lens[1]=100;
     vec_lens[2]=500;
@@ -65,7 +62,6 @@ int main(){
     vec_lens[7]=500000;
     vec_lens[8]=1000000;
 
-
     for(i=0; i<9; i++){
         for(j=0; j<3; j++){
            createVector(vector, AMOUNT_ALGO, vec_lens[i]);
@@ -74,13 +70,13 @@ int main(){
             cpyValues(vector);
 
             for(k=0; k<AMOUNT_ALGO; k++){
-
-                getSort(&vector[k], k);
-
+                getSort(vector, k);
             }
             printTables(vector);
             freeVector(vector);
         }
+
+
     }
 
     return 0;
@@ -93,17 +89,22 @@ String createString(int n){
 void freeString(String str){
     free(str);
 }
-void createVector(Vector vec[], int lenVector, int lenVecInVector){
+void createVector(Vector *vec, int lenVector, int lenVecInVector){
     int i;
     for(i=0;i<lenVector;i++){
         vec[i].vec=(int *)malloc(sizeof(int)*lenVecInVector);
+        vec[i].name = createString(100);
+        vec[i].len = lenVecInVector;
+        //vec[i].duration=0;
+        vec[i].movement=0;
+        vec[i].comparisons=0;
     }
-    vec->len = lenVecInVector;
 }
 void freeVector(Vector *v){
     int i;
     for(i=0; i<AMOUNT_ALGO;i++){
-        free(v->vec);
+        free(v[i].vec);
+        free(v[i].name);
     }
     free(v);
 }
@@ -114,80 +115,89 @@ void generateValues(Vector *vetor, int len, int order){
             for(i=0; i<len;i++){
                 vetor[0].vec[i]= i;
             }
+            vetor[0].order=ASCENDING;
             break;
         case DESCENDING:
             for(i=0, j=len-1; i<len; i++, j--){
                  vetor[0].vec[i]= j;
             }
+            vetor[0].order=DESCENDING;
             break;
         case RANDOM:
             srand(time(NULL));
             for(i=0; i<len;i++){
                  vetor[0].vec[i] = (rand()%1000001);
             }
+            vetor[0].order=RANDOM;
             break;
     }
 }
 void cpyValues(Vector *vector){
     int i, j;
     for(i=1; i<AMOUNT_ALGO;i++){
+
         for(j=0; j<vector->len;j++){
             vector[i].vec[j]= vector[0].vec[j];
+
         }
+        vector[i].order = vector[j].order;
+
     }
 }
 
-time_t timeCalculator(time_t start, time_t final){
-    return (final-start)/1000;//ms
+float timeCalculator(time_t start, time_t final){
+    return difftime(final, start)/1000;//ms
 }
 
 void getSort(Vector *vec, int algo){
     switch(algo){
         case 0:
-            strcpy(vec->ds->name,"BubbleSort");
-            bubbleSort(vec);
+            strcpy(vec[0].name,"BubbleSort");
+            bubbleSort(&vec[0]);
             break;
         case 1:
-            strcpy(vec->ds->name,"InsertSort");
-            insertSort(vec);
+            strcpy(vec[1].name,"InsertSort");
+            insertSort(&vec[1]);
             break;
         case 2:
-            strcpy(vec->ds->name,"SelectionSort");
-            selectionSort(vec);
+            strcpy(vec[2].name,"SelectionSort");
+            selectionSort(&vec[2]);
             break;
             case 3:
-            strcpy(vec->ds->name,"ShellSort");
-            shellSort(vec);
+            strcpy(vec[3].name,"ShellSort");
+            shellSort(&vec[3]);
             break;
         case 4:
-            strcpy(vec->ds->name,"QuickSort");
-            quickSort(vec, 0, vec->len);
+            strcpy(vec[4].name,"QuickSort");
+            time_t start, final;
+
+            start = time(NULL);
+
+
+            quickSort(&vec[4], 0, vec[4].len-1);
+            final = time(NULL);
+            vec[4].duration = timeCalculator(start, final);
             break;
     }
 }
 void printTables(Vector *vec){
-
     int i;
-    addHeader(vec);
 
-    for(i=0; i<vec->len;i++){
-        addLine(&vec[i]);
+    addHeader(&vec[0]);
+
+    for(i=0; i<AMOUNT_ALGO;i++){
+        addLine(vec[i]);
     }
     printf("+-------------------------------------------------------------------------------------------------------------+\n\n");
 }
 
 void addHeader(Vector *vec){
-
     int aux;
 
-    String str_partition = createString(100);
-    strcpy(str_partition, "+-------------------------------------------------------------------------------------------------------------+");
+    String str_partition = createString(256);
+    strcpy(str_partition, "+-------------------------------------------------------------------------------------------------------------+\n");
 
-    String str_order = createString(100);
-    strcpy(str_order, "+ 													   		ORDEM ");
-
-    String str_elem = createString(100);
-    strcpy(str_elem, "+ 															      ");
+    String str_order = createString(20);
 
     if(vec->len<10)
         aux=1;
@@ -204,28 +214,32 @@ void addHeader(Vector *vec){
     else
         aux=7;
 
-    switch(vec->ds->order){
+    switch(vec->order){
         case RANDOM:
-            strcat(str_order, "ALEATORIA");
+            strcpy(str_order, "ALEATORIA");
             break;
         case ASCENDING:
-            strcat(str_order, "CRESCENTE");
+            strcpy(str_order, "CRESCENTE");
             break;
         case DESCENDING:
-            strcat(str_order, "DECRESCENTE");
+            strcpy(str_order, "DECRESCENTE");
             break;
 
     }
 
     printf(str_partition);
-    printf(str_order);
-    addWhiteSpaces(strlen(str_order), strlen(str_partition)-1);
-    printf("+\n");
+    printf("|                                                    ORDEM %s", str_order);
 
-    printf(str_elem);
-    printf("%d Elementos", vec->len);
-    addWhiteSpaces((strlen(str_elem)+aux+10), strlen(str_partition)-1);
-    printf("+\n");
+    addWhiteSpaces(strlen("|                                                    ORDEM")+
+                   strlen(str_order)+2, strlen(str_partition));
+    printf("|\n");
+    printf(str_partition);
+
+    printf("|                                                    %d Elementos", vec->len);
+
+    addWhiteSpaces(strlen("|                                                     Elementos")+
+                   aux+1, strlen(str_partition));
+    printf("|\n");
 
     printf(str_partition);
     printf("|           Algoritmo           |      Tempo (ms)       |       Movimentacoes       |       Comparacoes       |\n");
@@ -240,36 +254,36 @@ void addWhiteSpaces(int lenCurrent, int lenFinal){
         printf(" ");
     }
 }
-void addLine(Vector* vec){
+void addLine(Vector vec){
 
-    String aux = createString(10);
-
-    printf("|");
-    printf("%s", vec->ds->name);
-    addWhiteSpaces(strlen(vec->ds->name), 32);
-
-
+    String aux = createString(100);
 
     printf("|");
-    sprintf(aux, "%ud",(unsigned int)vec->ds->duration);
+    printf("%s", vec.name);
+    addWhiteSpaces(strlen(vec.name), 32);
+
+
+
+    printf("|");
+    sprintf(aux, "%f", vec.duration);
     printf("%s", aux);
-    addWhiteSpaces(33+strlen(aux), 33+23);
+    addWhiteSpaces(33+strlen(aux), 34+23);
     freeString(aux);
 
-    aux = createString(10);
+    aux = createString(100);
 
     printf("|");
-    sprintf(aux, "%d",vec->ds->movement);
+    sprintf(aux, "%d",vec.movement);
     printf("%s", aux);
-    addWhiteSpaces(57+strlen(aux), 57+27);
+    addWhiteSpaces(57+strlen(aux), 58+27);
     freeString(aux);
 
-    aux = createString(10);
+    aux = createString(100);
 
     printf("|");
-    sprintf(aux, "%d",vec->ds->comparisons);
+    sprintf(aux, "%d",vec.comparisons);
     printf("%s", aux);
-    addWhiteSpaces(85+strlen(aux), 85+25);
+    addWhiteSpaces(85+strlen(aux), 86+25);
     freeString(aux);
 
     printf("|\n");
@@ -285,7 +299,7 @@ void move(int *vect, int position1, int position2){
     vect[position2] = aux;
 }
 
-void bubbleSort(Vector *vec){
+void bubbleSort(Vector* vec){
 
     int i, j, movement=0, comparisons=0;
     time_t start, final;
@@ -302,35 +316,34 @@ void bubbleSort(Vector *vec){
     }
     final = time(NULL);
 
-    vec->ds->comparisons = comparisons;
-    vec->ds->duration = timeCalculator(start, final);
-    vec->ds->movement = movement;
+    vec->comparisons = comparisons;
+    vec->duration = timeCalculator(start, final);
+    vec->movement = movement;
 
 }
-void insertSort(Vector *vec){
+void insertSort(Vector* vec){
     int i, j,movement=0, comparisons=0;
     time_t start, final;
 
     start = time(NULL);
     for (i = 1; i < vec->len; i++) {
         j = i;
-
         while (j > 0) {
             comparisons++;
-            if(vec->vec[j - 1] > vec->vec[j]){
-                move(vec->vec, j, j-1);
-                movement++;
-            }else{
+            if(vec->vec[j - 1] <= vec->vec[j]){
                 break;
             }
+            move(vec->vec, j, j-1);
+            movement++;
+
             j--;
         }
     }
     final = time(NULL);
 
-    vec->ds->comparisons = comparisons;
-    vec->ds->duration = timeCalculator(start, final);
-    vec->ds->movement = movement;
+    vec->comparisons = comparisons;
+    vec->duration = timeCalculator(start, final);
+    vec->movement = movement;
 }
 void selectionSort(Vector *vec){
     int i, j, minimum, movement=0, comparisons=0;
@@ -338,7 +351,7 @@ void selectionSort(Vector *vec){
 
     start = time(NULL);
     for (i = 0; i < ( vec->len - 1 ); i++) {
-            minimum = i;
+        minimum = i;
         for (j = ( i + 1 ); j < vec->len; j++){
             if( vec->vec[j] < vec->vec[minimum] ) {
                 comparisons++;
@@ -353,9 +366,9 @@ void selectionSort(Vector *vec){
     }
     final = time(NULL);
 
-    vec->ds->comparisons = comparisons;
-    vec->ds->duration = timeCalculator(start, final);
-    vec->ds->movement = movement;
+    vec->comparisons = comparisons;
+    vec->duration = timeCalculator(start, final);
+    vec->movement = movement;
 }
 void shellSort(Vector *vec){
     int i = (vec->len - 1) / 2;
@@ -379,44 +392,41 @@ void shellSort(Vector *vec){
     }
     final = time(NULL);
 
-    vec->ds->comparisons = comparisons;
-    vec->ds->duration = timeCalculator(start, final);
-    vec->ds->movement = movement;
+    vec->comparisons = comparisons;
+    vec->duration = timeCalculator(start, final);
+    vec->movement = movement;
 }
-void quickSort(Vector *vec, int begin, int end){
 
-    int i, j, middle;
-    time_t start, final;
+int partition (Vector* vec, int begin, int end){
+    int pivot = vec->vec[end];
+    int i = (begin - 1);
+    int j;
 
-    i = begin;
-    j = end;
-    middle = vec->vec[(begin + end) / 2];
+    for ( j = begin; j <= end- 1; j++)
+    {
 
-    start = time(NULL);
-
-    do{
-        while(vec->vec[i] < middle){i++; vec->ds->comparisons++;}
-        while(vec->vec[j] > middle){j--; vec->ds->comparisons++;}
-        if(i <= j){
-            vec->ds->comparisons++;
-            move(vec->vec, i, j);
-            vec->ds->movement++;
+        if (vec->vec[j] <= pivot)
+        {
+            vec->comparisons++;
             i++;
-            j--;
+            move(vec->vec,i, j);
         }
-    }while(i <= j);
-
-    vec->ds->comparisons++;
-    if(begin < j){
-        quickSort(vec, begin, j);
-
     }
-    vec->ds->comparisons++;
-    if(i < end){
-        quickSort(vec, i, end);
-    }
-    final = time(NULL);
-
-    vec->ds->duration = timeCalculator(start, final);
+    move(vec->vec,i+1, end);
+    vec->movement++;
+    return (i + 1);
 }
 
+void quickSort(Vector* vec, int begin, int end){
+
+    vec->comparisons++;
+    if (begin < end)
+    {
+
+        int pi = partition(vec, begin, end);
+
+        quickSort(vec, begin, pi - 1);
+        quickSort(vec, pi + 1, end);
+    }
+
+}
