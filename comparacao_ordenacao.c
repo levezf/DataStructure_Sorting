@@ -15,16 +15,17 @@ typedef char* String;
 
 struct data_sorting{
     int order;
-    float duration;
+    double duration;
     String name;
-    unsigned int comparisons;
-    unsigned int movement;
+    unsigned long int comparisons;
+    unsigned long int movement;
     int *vec;
     int len;
 };
 typedef struct data_sorting Vector;
 
 String createString(int n);
+
 void freeString(String str);
 void createVector(Vector *vec, int lenVector, int lenVecInVector);
 void freeVector(Vector *v);
@@ -35,6 +36,8 @@ void shellSort(Vector *vec);
 void quickSort(Vector *vec, int begin, int end);
 int partition (Vector* vec, int begin, int end);
 //heapsort e mais
+
+
 void move(int *vect, int position1, int position2);
 void getSort(Vector *vec, int algo);
 void cpyValues(Vector *vector);
@@ -44,7 +47,6 @@ void printTables(Vector *vec);
 void addLine(Vector vec);
 void addWhiteSpaces(int lenCurrent, int lenFinal);
 void addHeader(Vector *vec);
-
 
 
 int main(){
@@ -62,7 +64,7 @@ int main(){
     vec_lens[7]=500000;
     vec_lens[8]=1000000;
 
-    for(i=0; i<9; i++){
+    for(i=0; i<AMOUNT_LEN; i++){
         for(j=0; j<3; j++){
            createVector(vector, AMOUNT_ALGO, vec_lens[i]);
 
@@ -72,10 +74,13 @@ int main(){
             for(k=0; k<AMOUNT_ALGO; k++){
                 getSort(vector, k);
             }
+
             printTables(vector);
             freeVector(vector);
-        }
 
+
+
+        }
 
     }
 
@@ -106,7 +111,6 @@ void freeVector(Vector *v){
         free(v[i].vec);
         free(v[i].name);
     }
-    free(v);
 }
 void generateValues(Vector *vetor, int len, int order){
     int i,j;
@@ -126,7 +130,7 @@ void generateValues(Vector *vetor, int len, int order){
         case RANDOM:
             srand(time(NULL));
             for(i=0; i<len;i++){
-                 vetor[0].vec[i] = (rand()%1000001);
+                 vetor[0].vec[i] = (rand()%1001);
             }
             vetor[0].order=RANDOM;
             break;
@@ -140,7 +144,7 @@ void cpyValues(Vector *vector){
             vector[i].vec[j]= vector[0].vec[j];
 
         }
-        vector[i].order = vector[j].order;
+        vector[i].order = vector[0].order;
 
     }
 }
@@ -227,13 +231,13 @@ void addHeader(Vector *vec){
 
     }
 
-    printf(str_partition);
+    printf("%s", str_partition);
     printf("|                                                    ORDEM %s", str_order);
 
     addWhiteSpaces(strlen("|                                                    ORDEM")+
                    strlen(str_order)+2, strlen(str_partition));
     printf("|\n");
-    printf(str_partition);
+    printf("%s", str_partition);
 
     printf("|                                                    %d Elementos", vec->len);
 
@@ -241,9 +245,9 @@ void addHeader(Vector *vec){
                    aux+1, strlen(str_partition));
     printf("|\n");
 
-    printf(str_partition);
+    printf("%s", str_partition);
     printf("|           Algoritmo           |      Tempo (ms)       |       Movimentacoes       |       Comparacoes       |\n");
-    printf(str_partition);
+    printf("%s", str_partition);
 
 }
 
@@ -265,7 +269,7 @@ void addLine(Vector vec){
 
 
     printf("|");
-    sprintf(aux, "%f", vec.duration);
+    sprintf(aux, "%lf", vec.duration);
     printf("%s", aux);
     addWhiteSpaces(33+strlen(aux), 34+23);
     freeString(aux);
@@ -273,7 +277,7 @@ void addLine(Vector vec){
     aux = createString(100);
 
     printf("|");
-    sprintf(aux, "%d",vec.movement);
+    sprintf(aux, "%lu",vec.movement);
     printf("%s", aux);
     addWhiteSpaces(57+strlen(aux), 58+27);
     freeString(aux);
@@ -281,7 +285,7 @@ void addLine(Vector vec){
     aux = createString(100);
 
     printf("|");
-    sprintf(aux, "%d",vec.comparisons);
+    sprintf(aux, "%lu",vec.comparisons);
     printf("%s", aux);
     addWhiteSpaces(85+strlen(aux), 86+25);
     freeString(aux);
@@ -410,6 +414,7 @@ int partition (Vector* vec, int begin, int end){
             vec->comparisons++;
             i++;
             move(vec->vec,i, j);
+            vec->movement++;
         }
     }
     move(vec->vec,i+1, end);
@@ -425,7 +430,7 @@ void quickSort(Vector* vec, int begin, int end){
 
         int pi = partition(vec, begin, end);
 
-        quickSort(vec, begin, pi - 1);
+        quickSort(vec, begin,(pi-1));
         quickSort(vec, pi + 1, end);
     }
 
